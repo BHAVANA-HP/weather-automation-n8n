@@ -1,0 +1,339 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 30
+            },
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "bac1bb9b-0710-4ba3-8b8a-28c8bd00e9f0",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://api.openweathermap.org/data/2.5/weather",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "Bengaluru"
+            },
+            {
+              "name": "appid",
+              "value": "1c0e91a54e04f1ac4cb998630e88302f"
+            },
+            {
+              "name": "units",
+              "value": "metric"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "315d4464-f9b7-422a-9177-29c3beb08283",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4da1e439-0977-4f53-acde-ba95974c10a5",
+              "name": "=Timestamp",
+              "value": "={{$now}}",
+              "type": "string"
+            },
+            {
+              "id": "a738db93-d4ba-4923-b6d0-c426e7a574d1",
+              "name": "=city",
+              "value": "={{$json.name}}\n",
+              "type": "string"
+            },
+            {
+              "id": "47fd77dc-7518-4a9d-8b47-0e8257d5e127",
+              "name": "=Temperature",
+              "value": "={{$json.main.temp}}",
+              "type": "string"
+            },
+            {
+              "id": "d46e10bb-1ead-4421-a231-9b4b4589bbfa",
+              "name": "=Humidity",
+              "value": "={{$json.main.humidity}}",
+              "type": "string"
+            },
+            {
+              "id": "e0377722-43b9-4e15-b681-316d726fbe53",
+              "name": "=Weather Condition",
+              "value": "={{$json.weather[0].description}}",
+              "type": "string"
+            },
+            {
+              "id": "bd09fe21-75cb-41ec-b211-45ae60a5cb01",
+              "name": "=Wind Speed",
+              "value": "={{$json.wind.speed}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        448,
+        0
+      ],
+      "id": "98ddbb30-f4db-4338-a059-267f817faa74",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "models/gemini-3-flash-preview"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a weather assistant.\n\nCreate a short weather summary using the following information.\n\nCity: {{$json.city}}\nTemperature: {{$json.Temperature}} °C\nHumidity: {{$json.Humidity}}%\nWeather condition: {{$json[\"Weather Condition\"]}}\nWind speed: {{$json[\"Wind Speed\"]}} m/s\n\nWrite only 1-2 simple sentences.\nMention whether the weather is comfortable, hot, cloudy, rainy, or windy when appropriate.\nDo not make up information."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        672,
+        0
+      ],
+      "id": "71683fb0-1b99-455a-ad02-e1e4af9ad9fd",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "147qq9rCvCoKeAqtitSybz0hhLiSWqDCY7v6jgmC6H5M",
+          "mode": "list",
+          "cachedResultName": "weather",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/147qq9rCvCoKeAqtitSybz0hhLiSWqDCY7v6jgmC6H5M/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/147qq9rCvCoKeAqtitSybz0hhLiSWqDCY7v6jgmC6H5M/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{$node[\"Edit Fields\"].json[\"Timestamp\"]}}",
+            "city": "={{$node[\"Edit Fields\"].json[\"city\"]}}",
+            "Temperature": "={{$node[\"Edit Fields\"].json[\"Temperature\"]}}",
+            "Humidity": "={{$node[\"Edit Fields\"].json[\"Humidity\"]}}",
+            "Weather Condition": "={{$node[\"Edit Fields\"].json[\"Weather Condition\"]}}",
+            "AI Summary": "={{$json.content.parts[0].text}}",
+            "Wind Speed": "={{$node[\"Edit Fields\"].json[\"Wind Speed\"]}}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "city",
+              "displayName": "city",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Temperature",
+              "displayName": "Temperature",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Humidity",
+              "displayName": "Humidity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Weather Condition",
+              "displayName": "Weather Condition",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Wind Speed",
+              "displayName": "Wind Speed",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "AI Summary",
+              "displayName": "AI Summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1040,
+        0
+      ],
+      "id": "a913583d-b3b5-4ea1-8d78-f3d9ad1176e4",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "swPi55UwTa8P2tNO",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "path": "044559bd-011a-4955-8aeb-6cffa24e2cb2",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        1264,
+        0
+      ],
+      "id": "449233e6-3efb-41f9-8505-415130c199af",
+      "name": "Webhook",
+      "webhookId": "044559bd-011a-4955-8aeb-6cffa24e2cb2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "328309e6-f3b1-4202-b63c-89bd7f15c368",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "72b9b819b4c17645188a46e0ae75ffc8991692242fbd143a51f7c7e254cf49e1"
+  },
+  "nodeGroups": [],
+  "id": "puIU4TFt8RSpL4hi",
+  "tags": []
+}
